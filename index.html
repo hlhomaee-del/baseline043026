@@ -693,6 +693,31 @@ main{max-width:1320px;margin:auto;padding:28px 20px 80px}
 }
 .back .studyItem div{line-height:1.72!important}
 
+
+/* === Final specific paired highlights: BMI, BMR, body mechanics === */
+.back .bmiPurple{
+  color:#6d28d9!important;
+  font-weight:950!important;
+  text-decoration:underline!important;
+  text-decoration-color:#a78bfa!important;
+  text-decoration-thickness:3px!important;
+  text-underline-offset:4px!important;
+}
+.back .bmrOrange{
+  color:#c2410c!important;
+  font-weight:950!important;
+  background:linear-gradient(180deg,transparent 58%,rgba(251,146,60,.44) 58%)!important;
+  border-radius:5px!important;
+  padding:0 3px!important;
+}
+.back .bodyGreen{
+  color:#047857!important;
+  font-weight:950!important;
+  background:linear-gradient(180deg,transparent 58%,rgba(52,211,153,.40) 58%)!important;
+  border-radius:5px!important;
+  padding:0 3px!important;
+}
+
 </style>
 </head>
 <body>
@@ -1922,6 +1947,60 @@ validateQuestions(); renderNav(); renderBuilder(); updateStats(); renderPractice
 
   document.addEventListener('DOMContentLoaded',()=>setTimeout(window.applyPairedMemoryHighlights,520));
   document.addEventListener('click',()=>setTimeout(window.applyPairedMemoryHighlights,200));
+})();
+</script>
+
+
+<script>
+/* === Final specific semantic highlight correction: BMI/BMR/body mechanics === */
+(function(){
+  function unwrapTargeted(h){
+    return h
+      .replace(/<span class="(?:pairA|pairB|pairSafe|pairDanger|pairList|bmiPurple|bmrOrange|bodyGreen)">([\s\S]*?)<\/span>/gi,'$1');
+  }
+
+  function applySpecificSemanticPairs(){
+    document.querySelectorAll('.flip.topicTone .back .studyItem div').forEach(el=>{
+      let h = unwrapTargeted(el.innerHTML);
+
+      // BMI pair: BMI + body fat/fat screening stay purple/underlined as one idea.
+      h = h.replace(/\bBMI\b|\bBody Mass Index\b/gi, m=>`<span class="bmiPurple">${m}</span>`);
+      h = h.replace(/\bbody fat\b|\bfat screening\b|\bweight category\b|\bdisease risk\b/gi, m=>`<span class="bmiPurple">${m}</span>`);
+
+      // BMR pair: basal metabolic rate + energy/body heat stay orange.
+      h = h.replace(/\bBasal metabolic rate\b|\bBMR\b/gi, m=>`<span class="bmrOrange">${m}</span>`);
+      h = h.replace(/\benergy\b|\bbody heat\b|\bcalories burned at rest\b|\brate of energy use\b/gi, m=>`<span class="bmrOrange">${m}</span>`);
+
+      // Body mechanics pair: body mechanics + movement stay green.
+      h = h.replace(/\bBody mechanics\b/gi, m=>`<span class="bodyGreen">${m}</span>`);
+      h = h.replace(/\bmovement\b|\bproper movement\b|\blifting\b|\bposture\b|\balignment\b/gi, m=>`<span class="bodyGreen">${m}</span>`);
+
+      el.innerHTML = h;
+    });
+
+    // Concept checks must remain neutral.
+    document.querySelectorAll('.checkBox .mini, .checkBox .checkBtn').forEach(el=>{
+      el.querySelectorAll('span').forEach(span=>{
+        const parent=span.parentNode;
+        while(span.firstChild) parent.insertBefore(span.firstChild, span);
+        parent.removeChild(span);
+      });
+    });
+  }
+
+  window.applySpecificSemanticPairs = applySpecificSemanticPairs;
+
+  const oldRenderBuilderSpecific = window.renderBuilder;
+  if(typeof oldRenderBuilderSpecific === 'function'){
+    window.renderBuilder=function(){
+      const result=oldRenderBuilderSpecific.apply(this,arguments);
+      setTimeout(window.applySpecificSemanticPairs,260);
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(window.applySpecificSemanticPairs,700));
+  document.addEventListener('click',()=>setTimeout(window.applySpecificSemanticPairs,260));
 })();
 </script>
 
