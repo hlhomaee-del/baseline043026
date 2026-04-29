@@ -652,6 +652,47 @@ main{max-width:1320px;margin:auto;padding:28px 20px 80px}
 }
 .back .studyItem div{line-height:1.72!important}
 
+
+/* === Paired memory-anchor highlights for flashcard backs === */
+.back .pairA{
+  color:#6d28d9!important;
+  font-weight:950!important;
+  text-decoration:underline!important;
+  text-decoration-color:#a78bfa!important;
+  text-decoration-thickness:3px!important;
+  text-underline-offset:4px!important;
+}
+.back .pairB{
+  color:#c2410c!important;
+  font-weight:950!important;
+  background:linear-gradient(180deg,transparent 58%,rgba(251,146,60,.44) 58%)!important;
+  border-radius:5px!important;
+  padding:0 3px!important;
+}
+.back .pairSafe{
+  color:#047857!important;
+  font-weight:950!important;
+  background:linear-gradient(180deg,transparent 58%,rgba(52,211,153,.40) 58%)!important;
+  border-radius:5px!important;
+  padding:0 3px!important;
+}
+.back .pairDanger{
+  color:#be123c!important;
+  font-weight:950!important;
+  background:linear-gradient(180deg,transparent 58%,rgba(251,113,133,.34) 58%)!important;
+  border-radius:5px!important;
+  padding:0 3px!important;
+}
+.back .pairList{
+  color:#1d4ed8!important;
+  font-weight:950!important;
+  text-decoration:underline!important;
+  text-decoration-color:#60a5fa!important;
+  text-decoration-thickness:3px!important;
+  text-underline-offset:4px!important;
+}
+.back .studyItem div{line-height:1.72!important}
+
 </style>
 </head>
 <body>
@@ -1499,7 +1540,7 @@ validateQuestions(); renderNav(); renderBuilder(); updateStats(); renderPractice
     });
   }
 
-  window.applyMeaningfulFlashcardHighlights = function(){
+  window.applyMeaningfulFlashcardHighlights_DISABLED = function(){
     improveSpecificCards();
     document.querySelectorAll('.flip.topicTone .back .studyItem div').forEach(el=>{
       if(el.dataset.meaningfulHighlight==='1') return;
@@ -1521,13 +1562,13 @@ validateQuestions(); renderNav(); renderBuilder(); updateStats(); renderPractice
   if(typeof prevRenderBuilder === 'function'){
     window.renderBuilder = function(){
       const result=prevRenderBuilder.apply(this,arguments);
-      setTimeout(window.applyMeaningfulFlashcardHighlights,120);
+      setTimeout(function(){},120);
       return result;
     };
   }
 
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(window.applyMeaningfulFlashcardHighlights,350));
-  document.addEventListener('click',()=>setTimeout(window.applyMeaningfulFlashcardHighlights,150));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(function(){},350));
+  document.addEventListener('click',()=>setTimeout(function(){},150));
 })();
 </script>
 
@@ -1613,7 +1654,7 @@ validateQuestions(); renderNav(); renderBuilder(); updateStats(); renderPractice
     });
   }
 
-  window.cleanSharpsFlashcards=function(){
+  window.cleanSharpsFlashcards_DISABLED=function(){
     document.querySelectorAll('.flip.topicTone .back').forEach(back=>{
       improveSharpsWording(back);
       dedupeLines(back);
@@ -1634,13 +1675,13 @@ validateQuestions(); renderNav(); renderBuilder(); updateStats(); renderPractice
   if(typeof previousRenderBuilder === 'function'){
     window.renderBuilder=function(){
       const result=previousRenderBuilder.apply(this,arguments);
-      setTimeout(window.cleanSharpsFlashcards,180);
+      setTimeout(function(){},180);
       return result;
     };
   }
 
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(window.cleanSharpsFlashcards,450));
-  document.addEventListener('click',()=>setTimeout(window.cleanSharpsFlashcards,180));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(function(){},450));
+  document.addEventListener('click',()=>setTimeout(function(){},180));
 })();
 </script>
 
@@ -1694,13 +1735,193 @@ validateQuestions(); renderNav(); renderBuilder(); updateStats(); renderPractice
   if(typeof oldRenderBuilderHospice === 'function'){
     window.renderBuilder=function(){
       const result=oldRenderBuilderHospice.apply(this,arguments);
-      setTimeout(window.improveHospiceCards,220);
+      setTimeout(function(){},220);
       return result;
     };
   }
 
-  document.addEventListener('DOMContentLoaded',()=>setTimeout(window.improveHospiceCards,520));
-  document.addEventListener('click',()=>setTimeout(window.improveHospiceCards,220));
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(function(){},520));
+  document.addEventListener('click',()=>setTimeout(function(){},220));
+})();
+</script>
+
+
+<script>
+/* === Final paired memory anchors: each highlight connects concept + associated fact === */
+(function(){
+  const OLD_CLASSES = 'fcHiBlue|fcHiOrange|fcHiRed|fcHiGreen|fcHiPurple|fcHiDark|emph-blue|emph-orange|emph-red|emph-green|emph-purple|memPurple|memOrange|memRed|memGreen|memBlue|memList|memPair|pairA|pairB|pairSafe|pairDanger|pairList';
+
+  function stripOldHighlights(h){
+    let rx = new RegExp(`<span class="(?:${OLD_CLASSES})">([\\s\\S]*?)<\\/span>`, 'gi');
+    let prev;
+    do{
+      prev = h;
+      h = h.replace(rx, '$1');
+    }while(h !== prev);
+    return h;
+  }
+
+  function addMissingPairedFacts(back){
+    const allText = back.textContent || '';
+    const keyBox = back.querySelector('.studyItem.keyBox') || back.querySelector('.studyItem:not(.definitionBox)');
+    if(!keyBox) return;
+
+    function addOnce(testRx, sentence){
+      if(!testRx.test(keyBox.textContent)) {
+        const div = document.createElement('div');
+        div.innerHTML = '• ' + sentence;
+        keyBox.appendChild(div);
+      }
+    }
+
+    if(/Nitroglycerin|sublingual/i.test(allText)){
+      addOnce(/Nitroglycerin.*sublingual|sublingual.*Nitroglycerin/i, 'Nitroglycerin is commonly given sublingual, under the tongue.');
+    }
+    if(/Celiac|gluten/i.test(allText)){
+      addOnce(/Celiac.*gluten-free|gluten-free.*Celiac/i, 'Celiac disease requires a gluten-free diet.');
+    }
+    if(/label|specimen|tube|venipuncture|blood sample/i.test(allText)){
+      addOnce(/label tubes?.*patient name.*DOB.*date.*time.*collector/i, 'Label tubes with patient name, DOB, date, time, and collector initials.');
+      addOnce(/SSN should never be on specimen labels/i, 'SSN should never be on specimen labels.');
+    }
+    if(/butterfly|winged/i.test(allText)){
+      addOnce(/15° to 30° angle/i, 'Butterfly needle: insert at a 15° to 30° angle.');
+    }
+    if(/bleach|surface disinfection|disinfection/i.test(allText)){
+      addOnce(/1:10.*bleach.*surface disinfection/i, '1:10 bleach solution is used for surface disinfection when appropriate by policy.');
+    }
+    if(/Hospice|less than 6 months|end-of-life/i.test(allText)){
+      addOnce(/Hospice.*end-of-life.*less than 6 months/i, 'Hospice = end-of-life care for a dying or terminally ill patient, often less than 6 months.');
+    }
+    if(/CLIA|hCG|pregnancy/i.test(allText)){
+      addOnce(/CLIA.*CMS.*office lab/i, 'CLIA = Clinical Laboratory Improvement Amendments; CMS regulates office lab testing.');
+      addOnce(/CLIA-waived.*hCG/i, 'CLIA-waived tests are simple point-of-care tests, such as urine hCG pregnancy test.');
+    }
+    if(/sterile field/i.test(allText)){
+      addOnce(/sterile field.*center.*edges/i, 'Sterile field: keep items in the center; edges are considered contaminated.');
+    }
+    if(/burn/i.test(allText)){
+      addOnce(/Never.*clothing stuck to burns/i, 'Never pull clothing stuck to burns because pulling can tear burned tissue.');
+    }
+  }
+
+  const pairedRules = [
+    // Medication route pairs
+    [/\bNitroglycerin\b/gi,'pairA'], [/\bsublingual\b|\bunder the tongue\b/gi,'pairA'],
+    [/\bBuccal\b/gi,'pairA'], [/\bcheek and gums\b/gi,'pairA'],
+    [/\bBID\b/gi,'pairList'], [/\btwice\b/gi,'pairB'],
+
+    // Butterfly technique pair
+    [/\bButterfly\b|\bwinged needle\b|\bwinged infusion set\b/gi,'pairA'],
+    [/\b15° to 30° angle\b|\b15 to 30 degrees\b/gi,'pairA'],
+
+    // Specimen label pair
+    [/\blabel tubes?\b|\blabel specimens?\b|\bspecimen labels?\b/gi,'pairDanger'],
+    [/\bpatient name\b|\bDOB\b|\bdate\b|\btime\b|\bcollector initials?\b/gi,'pairList'],
+    [/\bSSN should never be on specimen labels\b|\bSSN\b|\bSocial Security number\b/gi,'pairDanger'],
+
+    // Celiac pair
+    [/\bCeliac disease\b|\bCeliac\b/gi,'pairA'],
+    [/\bgluten-free diet\b|\bgluten-free\b|\bgluten\b/gi,'pairDanger'],
+
+    // Bleach / disinfection pair
+    [/\b1:10 bleach solution\b|\b1:10\b/gi,'pairA'],
+    [/\bsurface disinfection\b|\bdisinfection\b/gi,'pairA'],
+
+    // Hospice pair
+    [/\bHospice\b/gi,'pairA'],
+    [/\bend-of-life care\b|\bdying\b|\bterminally ill\b|\bless than 6 months\b|\b6 months\b/gi,'pairB'],
+
+    // CLIA pair
+    [/\bCLIA\b|\bClinical Laboratory Improvement Amendments\b/gi,'pairA'],
+    [/\bCMS\b|\bCenters for Medicare and Medicaid Services\b/gi,'pairList'],
+    [/\bCLIA-waived\b|\bwaived\b/gi,'pairSafe'],
+    [/\bhCG\b|\burine pregnancy test\b|\bhuman chorionic gonadotropin\b/gi,'pairA'],
+
+    // Vitals and measurement pairs
+    [/\bSystolic\b/gi,'pairList'], [/\btop number\b|\bfirst sound\b|\bfirst Korotkoff sound\b/gi,'pairB'],
+    [/\bDiastolic\b/gi,'pairList'], [/\bbottom number\b|\bsound disappears\b|\bsounds disappear\b/gi,'pairB'],
+    [/\bBMI\b/gi,'pairA'], [/\b18\.5–24\.9\b|\b25–29\.9\b|\b30\.0–34\.9\b|\b35–39\.9\b|\b40\+\b/gi,'pairB'],
+    [/\bV4\b/gi,'pairA'], [/\bfifth intercostal space\b|\bmidclavicular line\b/gi,'pairB'],
+    [/\bSpO₂\b|\boxygen saturation\b/gi,'pairList'], [/\bcold fingers\b|\bpoor perfusion\b|\bfalsely low\b/gi,'pairDanger'],
+
+    // Procedure/safety pairs
+    [/\bmiddle finger\b|\bring finger\b/gi,'pairSafe'], [/\bthumb\b|\bpinky\b|\bindex\b/gi,'pairDanger'],
+    [/\border of draw\b/gi,'pairA'], [/\blight blue\b|\bgray top\b|\bblood cultures\b/gi,'pairList'],
+    [/\bSharps container\b/gi,'pairDanger'], [/\bitems that can puncture skin\b|\bcontain blood\b|\bneedles\b|\bscalpels\b|\blancets\b|\bcapillary tubes\b|\bsuture staples\b/gi,'pairB'],
+    [/\bsterile field\b/gi,'pairSafe'], [/\bcenter\b|\bedges are considered contaminated\b|\breach across\b|\bdrop microorganisms\b/gi,'pairB'],
+    [/\bautoclave\b|\bsterilization\b/gi,'pairA'], [/\bspores\b|\bsteam under pressure\b/gi,'pairB'],
+
+    // Infection pairs
+    [/\bstandard precautions\b|\bPPE\b|\bgloves\b|\bN-95\b|\brespirator\b/gi,'pairSafe'],
+    [/\bpotentially infectious materials\b|\bexposure\b|\bflush\b|\bimmediately flush\b/gi,'pairDanger'],
+    [/\bsoap and water\b/gi,'pairSafe'], [/\bvisible soil\b|\b15 seconds\b|\bminimum of 15 seconds\b/gi,'pairB'],
+    [/\b60%\b/gi,'pairB'], [/\balcohol-based hand sanitizer\b/gi,'pairSafe'],
+
+    // Disease/anatomy pairs
+    [/\bMitochondria\b/gi,'pairA'], [/\benergy\b/gi,'pairB'],
+    [/\bCilia\b/gi,'pairA'], [/\bmucus\b/gi,'pairB'],
+    [/\bHemochromatosis\b/gi,'pairA'], [/\biron\b/gi,'pairB'],
+    [/\bPTSD\b/gi,'pairA'], [/\boverwhelming experiences\b|\btrauma\b/gi,'pairB'],
+    [/\bheatstroke\b/gi,'pairDanger'], [/\bhot skin\b/gi,'pairDanger'],
+    [/\bNeurology\b/gi,'pairA'], [/\btingling\b|\bsevere headaches\b/gi,'pairB'],
+
+    // Communication/legal/community pairs
+    [/\bopen posture\b|\bleaning towards\b|\bface the patient\b|\bopen-ended\b|\ballow the patient to talk\b|\bprivate area\b/gi,'pairSafe'],
+    [/\binformed consent\b|\bconsent\b/gi,'pairList'], [/\bprovider explains\b|\brisks\b|\bbenefits\b|\balternatives\b/gi,'pairB'],
+    [/\bHIPAA\b|\bPrivacy Rule\b|\bPHI\b/gi,'pairA'],
+    [/\bpublic health department\b/gi,'pairB'], [/\bcommunicable disease\b/gi,'pairA'],
+    [/\bDomestic violence shelter\b|\bAmerican Red Cross\b/gi,'pairDanger'],
+
+    // Documentation/insurance pairs
+    [/\bSubjective\b/gi,'pairList'], [/\bpatient reports\b|\bpatient states\b/gi,'pairB'],
+    [/\bObjective\b/gi,'pairList'], [/\bmeasured\b|\bobserved\b/gi,'pairB'],
+    [/\bprimary policy\b/gi,'pairA'], [/\bearliest birth month\b/gi,'pairB'],
+    [/\bLot number\b/gi,'pairB'], [/\bimmunization\b/gi,'pairA']
+  ];
+
+  function applyPairsToHTML(h){
+    h = stripOldHighlights(h);
+    // Remove meaningless standalone provider emphasis; keep phrases like provider explains.
+    pairedRules.forEach(([rx, cls])=>{
+      h = h.replace(rx, m=>`<span class="${cls}">${m}</span>`);
+    });
+    return h;
+  }
+
+  function keepConceptChecksNeutral(){
+    document.querySelectorAll('.checkBox .mini, .checkBox .checkBtn').forEach(el=>{
+      el.querySelectorAll('span').forEach(span=>{
+        const parent=span.parentNode;
+        while(span.firstChild) parent.insertBefore(span.firstChild, span);
+        parent.removeChild(span);
+      });
+    });
+  }
+
+  window.applyPairedMemoryHighlights = function(){
+    document.querySelectorAll('.flip.topicTone .back').forEach(back=>{
+      addMissingPairedFacts(back);
+      back.querySelectorAll('.studyItem div').forEach(el=>{
+        if(el.dataset.pairedHighlight === '1') return;
+        el.innerHTML = applyPairsToHTML(el.innerHTML);
+        el.dataset.pairedHighlight = '1';
+      });
+    });
+    keepConceptChecksNeutral();
+  };
+
+  const oldRenderBuilderPaired = window.renderBuilder;
+  if(typeof oldRenderBuilderPaired === 'function'){
+    window.renderBuilder=function(){
+      const result=oldRenderBuilderPaired.apply(this,arguments);
+      setTimeout(window.applyPairedMemoryHighlights,180);
+      return result;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(window.applyPairedMemoryHighlights,520));
+  document.addEventListener('click',()=>setTimeout(window.applyPairedMemoryHighlights,200));
 })();
 </script>
 
